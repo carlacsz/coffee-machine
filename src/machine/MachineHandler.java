@@ -1,17 +1,15 @@
-import coffee.types.Coffee;
-import coffee.components.Component;
-
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 
-public class CoffeeMachineUI {
-    private CoffeeMachine coffeeMachine;
-    private Scanner scanner = new Scanner(System.in);
-    private HashMap<String, Coffee> menu = new HashMap<>();
+public class MachineHandler {
+
+    private final CoffeeMachine coffeeMachine;
+    private final Scanner scanner = new Scanner(System.in);
+    private HashMap<String, CoffeeType> menu = new HashMap<>();
     private String menuQuestion;
 
-    public CoffeeMachineUI(CoffeeMachine coffeeMachine) {
+    public MachineHandler(CoffeeMachine coffeeMachine) {
         this.coffeeMachine = coffeeMachine;
         generateMenu();
     }
@@ -34,14 +32,15 @@ public class CoffeeMachineUI {
                         break;
                     case "fill":
                         coffeeMachine.setState(MachineState.FILLING);
-                        processAction(null);
+                        fill();
+                        returnToWaitingForAction();
                         break;
                     case "take":
-                        take();
+                        System.out.println("I gave you $" + coffeeMachine.takeMoneyEarned());
                         returnToWaitingForAction();
                         break;
                     case "remaining":
-                        printRemaining();
+                        System.out.println(coffeeMachine);
                         returnToWaitingForAction();
                         break;
                     case "exit":
@@ -49,16 +48,12 @@ public class CoffeeMachineUI {
                         return;
                     default:
                         System.out.println("Invalid action");
-                        System.out.println("Write action (buy, fill, take, remaining, exit):");
+                        printActions();
                         break;
                 }
                 break;
             case BUYING:
                 buy(action);
-                returnToWaitingForAction();
-                break;
-            case FILLING:
-                fill();
                 returnToWaitingForAction();
                 break;
         }
@@ -69,31 +64,41 @@ public class CoffeeMachineUI {
         printActions();
     }
 
-    private void fill(){
+    private void fill() {
         int suppliesFilled = 0;
-        ArrayList<Component> supplies = coffeeMachine.getSupplies();
+        List<Ingredient> supplies = coffeeMachine.getSupplies();
         while (suppliesFilled < supplies.size()) {
-            Component supply = supplies.get(suppliesFilled);
+            Ingredient supply = supplies.get(suppliesFilled);
             String question = String.format("Write how many %s of %s do you want to add:",
                     supply.getMeasure(), supply.getName());
             System.out.println(question);
             try {
-                supply.addAmount(Integer.parseInt(readLine()));
+                supply.addQuantity(Integer.parseInt(readLine()));
                 suppliesFilled++;
-            } catch (NumberFormatException  e) {
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid number, please enter a valid amount");
+            }
+        }
+        while (true) {
+            System.out.println("Write how many disposable cups do you want to add:");
+            try {
+                coffeeMachine.addDisposableCups(Integer.parseInt(readLine()));
+                break;
+            } catch (NumberFormatException e) {
                 System.out.println("Invalid number, please enter a valid amount");
             }
         }
     }
+
     private void buy(String option) {
         if ("back".equalsIgnoreCase(option)) {
             return;
         }
-        Coffee coffee = menu.get(option);
-        if (coffee != null) {
-            if (coffeeMachine.canMakeCoffee(coffee)) {
-                System.out.println("I have enough resources, making you a(n) " + coffee.getName());
-                coffeeMachine.makeCoffee(coffee);
+        CoffeeType coffeeType = menu.get(option);
+        if (coffeeType != null) {
+            if (coffeeMachine.hasEnoughSupplies(coffeeType)) {
+                System.out.println("I have enough resources, making you a(n) " + coffeeType.getName());
+                coffeeMachine.makeCoffee(coffeeType);
             } else {
                 System.out.println("Sorry, not enough resources!");
             }
@@ -103,30 +108,24 @@ public class CoffeeMachineUI {
         }
     }
 
-    private void take() {
-        System.out.println("I gave you $" + coffeeMachine.takeMoneyEarned());
+    private void generateMenu() {
+        List<CoffeeType> coffeeTypeTypes = coffeeMachine.getCoffeeTypes();
+        StringBuilder question = new StringBuilder("What do you want to buy? ");
+        for (int i = 0; i < coffeeTypeTypes.size(); i++) {
+            String itemNumber = String.valueOf(i + 1);
+            menu.put(itemNumber, coffeeTypeTypes.get(i));
+            question.append(itemNumber).append(" - ").append(coffeeTypeTypes.get(i).getName()).append(", ");
+        }
+        question.append("back - to main menu:");
+        menuQuestion = question.toString();
     }
 
-    private void generateMenu() {
-        ArrayList<Coffee> coffeeTypes = coffeeMachine.getCoffeeTypes();
-        menuQuestion = "What do you want to buy? ";
-        for (int i = 0; i < coffeeTypes.size(); i++) {
-            String itemNumber = String.valueOf(i + 1);
-            menu.put(itemNumber, coffeeTypes.get(i));
-            menuQuestion += itemNumber + " - " + coffeeTypes.get(i).getName() + ", ";
-        }
-        menuQuestion += "back - to main menu:";
-    }
-    private void printRemaining() {
-        for (Component supply : coffeeMachine.getSupplies()) {
-            System.out.println(supply);
-        }
-        System.out.println(String.format("$%d of money", coffeeMachine.getMoneyEarned()));
-    }
-    private String readLine() {
-        return scanner.nextLine();
-    }
     private void printActions() {
         System.out.println("Write action (buy, fill, take, remaining, exit):");
     }
+
+    private String readLine() {
+        return scanner.nextLine();
+    }
+
 }
