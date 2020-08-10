@@ -5,13 +5,14 @@ public class CoffeeMachine {
 
     public static final int ONE = 1;
 
-    private List<Ingredient> supplies;
-    private List<CoffeeType> coffeeTypes;
+    private final List<Ingredient> supplies;
+    private final List<CoffeeType> coffeeTypes;
     private int disposableCups;
     private double moneyEarned;
     private MachineState state;
 
-    public CoffeeMachine(List<Ingredient> supplies, List<CoffeeType> coffeeTypes, int disposableCups, double moneyEarned) {
+    public CoffeeMachine(List<Ingredient> supplies, List<CoffeeType> coffeeTypes,
+                         int disposableCups, double moneyEarned) {
         this.supplies = supplies;
         this.coffeeTypes = coffeeTypes;
         this.disposableCups = disposableCups;
@@ -45,11 +46,8 @@ public class CoffeeMachine {
 
     private Ingredient findSupplyFor(Ingredient ingredient) {
         Optional<Ingredient> supplyFound = supplies.stream().filter(
-                supply -> supply.getName() == ingredient.getName()).findFirst();
-        if (supplyFound != null) {
-            return supplyFound.get();
-        }
-        return null;
+                supply -> supply.getName().equals(ingredient.getName())).findFirst();
+        return supplyFound.orElse(null);
     }
 
     public double takeMoneyEarned() {

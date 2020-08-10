@@ -1,7 +1,8 @@
 public enum IngredientType {
     WATER("water", "ml"),
     MILK("milk","ml"),
-    COFFEE_BEANS("coffee beans", "grams");
+    COFFEE_BEANS("coffee beans", "grams"),
+    CHOCOLATE("chocolate powder", "grams");
 
     private final String name, measure;
 

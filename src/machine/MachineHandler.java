@@ -6,7 +6,7 @@ public class MachineHandler {
 
     private final CoffeeMachine coffeeMachine;
     private final Scanner scanner = new Scanner(System.in);
-    private HashMap<String, CoffeeType> menu = new HashMap<>();
+    private final HashMap<String, CoffeeType> menu = new HashMap<>();
     private String menuQuestion;
 
     public MachineHandler(CoffeeMachine coffeeMachine) {
@@ -25,6 +25,7 @@ public class MachineHandler {
         MachineState state = coffeeMachine.getState();
         switch (state) {
             case WAITING_ACTION:
+                action = action.toLowerCase();
                 switch (action) {
                     case "buy":
                         coffeeMachine.setState(MachineState.BUYING);
@@ -104,7 +105,6 @@ public class MachineHandler {
             }
         } else {
             System.out.println("Invalid type of coffee");
-            System.out.println(menuQuestion);
         }
     }
 
